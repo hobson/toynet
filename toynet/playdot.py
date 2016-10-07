@@ -10,7 +10,7 @@ from keras.layers.advanced_activations import ParametricSoftExp
 np = pd.np
 
 
-def multipliplay(N=1, M=1000, nb_epoch=200, activation='relu', lr=0.001, momentum=0.001, decay=0.001, nesterov=False):
+def multiplay(N=1, M=1000, nb_epoch=200, activation='relu', lr=0.001, momentum=0.001, decay=0.001, nesterov=False):
     """ Learn to multiply and and inputs together """
 
     from keras.regularizers import l1, activity_l1
@@ -37,18 +37,18 @@ def multipliplay(N=1, M=1000, nb_epoch=200, activation='relu', lr=0.001, momentu
     return model, X, y, X_test, y_test
 
 
-def explay(N=1, M=1000, nb_epoch=200, activation=ParametricSoftExp(alpha_init=0.2), lr=0.001, momentum=0.001, decay=0.001, nesterov=False):
+def layerplay(N=1, M=1000, nb_epoch=200, lr=0.001, momentum=0.001, decay=0.001, nesterov=False):
     """ Learn to multiply and and inputs together """
 
     from keras.regularizers import l1, activity_l1
 
     model = Sequential()
     model.add(Dense(4 * N, input_dim=N * 2, W_regularizer=l1(0.03), activity_regularizer=activity_l1(0.03)))
-    model.add(Activation(activation) if isinstance(activation, str) else activation)
+    model.add(ParametricSoftExp(alpha_init=0.2))
     model.add(Dense(4 * N, W_regularizer=l1(0.03), activity_regularizer=activity_l1(0.03)))
-    model.add(Activation(activation) if isinstance(activation, str) else activation)
+    model.add(ParametricSoftExp(alpha_init=0.2))
     model.add(Dense(1, W_regularizer=l1(0.03), activity_regularizer=activity_l1(0.03)))
-    model.add(Activation(activation) if isinstance(activation, str) else activation)
+    model.add(ParametricSoftExp(alpha_init=0.2))
 
     model.compile(optimizer=SGD(lr=lr, momentum=momentum, decay=decay, nesterov=nesterov),
                   loss='mse')
