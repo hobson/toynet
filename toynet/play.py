@@ -6,21 +6,45 @@ from keras.optimizers import SGD
 from keras.layers.advanced_activations import ParametricSoftExponential, ParametricSoftplus
 from keras.regularizers import l1, activity_l1, l1l2
 
-
-model = Sequential()
-
-
-M = 20000
+M = 30000
 N = 1
 nb_epoch = 100
+num_experiments = 5
 
-model.add(Dense(1, input_dim=N * 2, W_regularizer=l1l2(0.01)))
-model.add(ParametricSoftExp(1))
+X = pd.DataFrame(pd.np.random.randn(M, 2))
+y = pd.DataFrame((X.T.values[:N] * X.T.values[N:])).sum()
 
-model.compile(loss='mean_squared_error', optimizer='rmsprop')
+results = []
+for i in range(num_experiements):
+    row = []
+    for softexp in range(2):
+        model = Sequential()
+        model.add(Dense(2 * N, input_dim=2 * N, W_regularizer=None))  # =l1l2(0.003)))
+        if softexp:
+            model.add(ParametricSoftExponential(-0.9), W_regularizer=l1l2(0.003))
+        else:
+            model.add(Activation('relu'))
+        model.add(Dense(1 * N, input_dim=2 * N, W_regularizer=None))  # l1l2(0.003)))
+        if softexp:
+            model.add(ParametricSoftExponential(+0.9, W_regularizer=l1l2(0.003)))
+        else:
+            model.add(Activation('relu'))
+        model.add(Dense(1, input_dim=1, W_regularizer=None))  # l1l2(0.003)))
+        model.add(Activation('linear'))
 
+        # model.add(Dense(2, input_dim=2, W_regularizer=l1l2(0.001)))
+        # # model.add(ParametricSoftplus(.2))
+        # model.add(ParametricSoftExponential(.9, output_dim=1))
+        # model.add(Dense(1, input_dim=2, W_regularizer=l1l2(0.001)))
+        # # model.add(ParametricSoftplus(.2))
+        # model.add(ParametricSoftExponential(-.9))
+        # model.add(Dense(1, input_dim=2, W_regularizer=l1l2(0.001)))
+        # model.add(Activation('relu'))
 
-X = pd.DataFrame(pd.np.random.randn(M, N * 2))
-y = (X.T.loc[:N] * X.T.loc[N:]).sum().T.values
-
-model.fit(X.values, y, nb_epoch=nb_epoch)
+        # solution varies even when training data is unchanged
+        # this will converge to < 0.01 loss about 60% of the time, NaNs about 20% of the time, and RMSE loss 1.-3. for the remainder
+        model.compile(loss='mean_squared_error', optimizer='rmsprop')  # SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True))
+        model.fit(X.values, y.values, batch_size=35, validation_split=0, nb_epoch=nb_epoch)
+        row += [model.evaluate(X.values, y.values)]
+    print(row)
+    results += [row]
